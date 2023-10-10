@@ -144,23 +144,23 @@ export class VRHall {
   }
 
   // 镜面反射
-  _reflectorPlane() {
-    const size = 1000;
-    // 镜面
-    const geometry = new THREE.PlaneBufferGeometry(size, size);
-    const verticalMirror = new Reflector(geometry, {
-      opacity: 0.1,
-      textureWidth: size,
-      textureHeight: size,
-      color: "#fff",
-    });
-    verticalMirror.material.side = THREE.DoubleSide;
-    verticalMirror.material.transparent = true;
-    verticalMirror.material.opacity = 0.1;
-    verticalMirror.rotation.x = -Math.PI / 2;
-    verticalMirror.position.y = this._planeMesh.position.y + 0.1;
-    this._scene.add(verticalMirror);
-  }
+  // _reflectorPlane() {
+  //   const size = 1000;
+  //   // 镜面
+  //   const geometry = new THREE.PlaneBufferGeometry(size, size);
+  //   const verticalMirror = new Reflector(geometry, {
+  //     opacity: 0.1,
+  //     textureWidth: size,
+  //     textureHeight: size,
+  //     color: "#fff",
+  //   });
+  //   verticalMirror.material.side = THREE.DoubleSide;
+  //   verticalMirror.material.transparent = true;
+  //   verticalMirror.material.opacity = 0.1;
+  //   verticalMirror.rotation.x = -Math.PI / 2;
+  //   verticalMirror.position.y = this._planeMesh.position.y + 0.1;
+  //   this._scene.add(verticalMirror);
+  // }
 
   /**
    * 初始化
@@ -188,7 +188,7 @@ export class VRHall {
     this._camera = new THREE.PerspectiveCamera(70, width / height, 0.1, 10000);
     this._scene.add(this._camera);
 
-    // 光
+    // 环境光
     this._scene.add(new THREE.AmbientLight(0xffffff, 1));
     // 平行光
     const dirLight = new THREE.DirectionalLight(0xffffff, 0.7);
@@ -274,9 +274,13 @@ export class VRHall {
   ) {
     // 调用动画
     const mixer = new THREE.AnimationMixer(gltf.scene);
+    // 获取指定索引的动画
     const ani = gltf.animations[animateIndex];
+    // 创建动画操作
     const AnimationAction = mixer.clipAction(ani);
+    // 设置动画的持续时间并播放动画
     AnimationAction.setDuration(duration).play();
+    // 手动更新动画混合器，确保动画生效
     mixer.update(0);
     // 加入动画
     this.addAnimate((d) => {
@@ -298,23 +302,24 @@ export class VRHall {
 
   /**
    * 移动动画
-   * @param {*} to
-   * @param {*} lookat
+   * @param {*} position 相机位置
+   * @param {*} lookat 相机视角
    * @param {*} duration
    */
   moveTo(position, lookat, duration) {
     this._controls.saveState();
     const lookatV3 = new THREE.Vector3(position.x, position.y, position.z);
+    //使用线性插值（lerp）来平滑过渡摄像机的朝向
     lookatV3.lerp(new THREE.Vector3(lookat.x, lookat.y, lookat.z), this._EPS);
 
     // 获取当前的lookAt参数
-    const fromPosition = new THREE.Vector3();
-    const fromLookAt = new THREE.Vector3();
-    this._controls.getPosition(fromPosition);
-    this._controls.getTarget(fromLookAt);
+    // const fromPosition = new THREE.Vector3();
+    // const fromLookAt = new THREE.Vector3();
+    // this._controls.getPosition(fromPosition);
+    // this._controls.getTarget(fromLookAt);
 
-    const lookatV32 = new THREE.Vector3(position.x, position.y, position.z);
-    lookatV32.lerp(new THREE.Vector3(lookat.x, lookat.y, lookat.z), this._EPS);
+    // const lookatV32 = new THREE.Vector3(position.x, position.y, position.z);
+    // lookatV32.lerp(new THREE.Vector3(lookat.x, lookat.y, lookat.z), this._EPS);
 
     this._controls.setLookAt(
       position.x,
@@ -348,18 +353,23 @@ export class VRHall {
     // 射线计算
     const container = this._options.container;
     this._mouse = new THREE.Vector2();
+    // 这里需要使用canvas标准坐标系x,y范围为【-1，1】
     this._mouse.set(
       (x / container.clientWidth) * 2 - 1,
       -(y / container.clientHeight) * 2 + 1
     );
+    //创建一条从相机位置指向屏幕坐标 (x, y) 的射线
     this._raycaster.setFromCamera(this._mouse, this._camera);
+    // 返回选中的模型
     const intersects = this._raycaster.intersectObjects(
       [...meshes, ...this._eventMeshs],
       true
     );
     const intersect = intersects[0];
     if (intersect) {
+      // 点击位置
       const v3 = intersects[0].point;
+      // 相机平滑过度到V3
       const lookat = this._camera.position.lerp(v3, 1 + this._EPS);
       // 点击元素
       const mesh = intersect.object;
@@ -446,7 +456,7 @@ export class VRHall {
     ) {
       return;
     }
-
+    // 射线
     const rayRes = this._getBoxRaycaster(
       {
         x: event.clientX - left,
@@ -590,6 +600,7 @@ export class VRHall {
     this._itemsData = data;
     const { maxSize } = this._options;
     data.forEach(async (item) => {
+      // 纹理贴图
       const texture = await this._textLoader.loadAsync(item.url);
       if (texture.image.width > maxSize) {
         item.width = maxSize;
@@ -598,20 +609,23 @@ export class VRHall {
         item.height = MAX;
         item.width = (maxSize / texture.image.height) * texture.image.width;
       }
-
+      // 创建立方体
       const geometry = new THREE.BoxGeometry(
         item.width,
         item.height,
         item.depth ? item.depth : 2
       );
+      // 边缘材质
       const materialBorder = new THREE.MeshBasicMaterial({
         color: item.color ? item.color : "#ffffff",
         map: this._textLoader.load("./assets/room1/wall.png"),
       });
+      // 正面材质使用贴图
       const material = new THREE.MeshBasicMaterial({
         color: item.color ? item.color : "#ffffff",
         map: texture,
       });
+      // 创建模型
       const cube = new THREE.Mesh(geometry, [
         materialBorder,
         materialBorder,
@@ -620,6 +634,7 @@ export class VRHall {
         materialBorder,
         material,
       ]);
+      // 设置位置、旋转、缩放、添加到场景
       cube.name = item.name;
       cube.rotation.set(item.rotation.x, item.rotation.y, item.rotation.z);
       cube.scale.set(item.scale.x, item.scale.y, item.scale.z);

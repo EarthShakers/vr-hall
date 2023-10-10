@@ -51,7 +51,7 @@ window.onload = function () {
       //   child.material.emissiveMap = child.material.map;
       // }
     });
-    
+
     const dm_OBJ = gltf.scene.getObjectByName("dm");
     dm_OBJ.material = m.dm_M;
     const dm2_OBJ = gltf.scene.getObjectByName("dm2");
@@ -141,31 +141,31 @@ window.onload = function () {
     vr.createAnimate(gltf, { animateIndex: 0, duration: 60 });
   });
 
-  // // 加载房模型
-  // vr.loadGLTF({
-  //   scale: 0.4,
-  //   position: {
-  //     x: -9.697628171904498,
-  //     y: 1.6742415555214554,
-  //     z: 3.343388656678843,
-  //   },
-  //   rotation: {
-  //     x: -3.141592653589793,
-  //     y: 0.03132610956215899,
-  //     z: -3.141592653589793,
-  //   },
-  //   url: `./assets/gltfs/feichuan.glb`,
-  //   autoLight: true,
-  // }).then((gltf) => {
-  //   gltf.scene.odata = { id: "man" };
-  //   vr.addClickEvent(gltf.scene);
-  //   vr.createAnimate(gltf, { animateIndex: 0, duration: 60 });
-  // });
+  // 加载飞船模型
+  vr.loadGLTF({
+    scale: 0.4,
+    position: {
+      x: -9.697628171904498,
+      y: 1.6742415555214554,
+      z: 3.343388656678843,
+    },
+    rotation: {
+      x: -3.141592653589793,
+      y: 0.03132610956215899,
+      z: -3.141592653589793,
+    },
+    url: `./assets/gltfs/feichuan.glb`,
+    autoLight: true,
+  }).then((gltf) => {
+    gltf.scene.odata = { id: "man" };
+    vr.addClickEvent(gltf.scene);
+    vr.createAnimate(gltf, { animateIndex: 0, duration: 60 });
+  });
 
   // 加载画框数据
   vr.loadItems(data);
 
-  // vr.initVRButton();
+  vr.initVRButton();
 
   // 导览点
   let shtml = "";
